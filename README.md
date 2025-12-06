@@ -227,6 +227,86 @@ r.json()
 
 print("Job deletado com sucesso") 
 ```
+## EXTRA: (Gerar um HTML pra não ter que ficar lendo todo o biomarker, pois ele é muito grande)
+```Python
+import pandas as pd
 
+# 1. Carregar o arquivo (ajuste o caminho se necessário)
+file_path = 'biomarkers.tsv' 
+df = pd.read_csv(file_path, sep='\t')
+
+# 2. Função para colorir a coluna 'Response'
+def format_response(val):
+    val_str = str(val).lower()
+    if 'resistant' in val_str:
+        # Fundo vermelho claro, texto vermelho escuro
+        return f'<span style="color: #721c24; background-color: #f8d7da; padding: 4px; border-radius: 4px; font-weight: bold;">{val}</span>'
+    elif 'responsive' in val_str:
+        # Fundo verde claro, texto verde escuro
+        return f'<span style="color: #155724; background-color: #d4edda; padding: 4px; border-radius: 4px; font-weight: bold;">{val}</span>'
+    return val
+
+# 3. Função para transformar URLs em links clicáveis
+def format_links(val):
+    if str(val).startswith('http'):
+        return f'<a href="{val}" target="_blank" style="text-decoration: none; color: #007bff;">🔗 Link</a>'
+    return val
+
+# Aplicar as formatações
+# Nota: Fazemos isso convertendo para string HTML antes de gerar a tabela final
+if 'Response' in df.columns:
+    df['Response'] = df['Response'].apply(format_response)
+
+if 'Evidence' in df.columns:
+    df['Evidence'] = df['Evidence'].apply(format_links)
+
+# 4. Gerar o HTML com DataTables (Biblioteca JS para interatividade)
+html_template = f"""
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Biomarcadores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <style>
+        body {{ padding: 20px; font-family: sans-serif; background-color: #f8f9fa; }}
+        .container-fluid {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }}
+        h2 {{ margin-bottom: 20px; color: #333; }}
+        table {{ width: 100% !important; font-size: 0.9em; }}
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h2>🧬 Relatório de Biomarcadores e Resposta a Drogas</h2>
+        <div class="table-responsive">
+            {df.to_html(classes='table table-striped table-hover table-bordered', index=False, escape=False, table_id='biomarkerTable')}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {{
+            $('#biomarkerTable').DataTable({{
+                "language": {{
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+                }},
+                "pageLength": 15,
+                "order": [[ 5, "asc" ]] // Ordena inicialmente pela coluna Response
+            }});
+        }});
+    </script>
+</body>
+</html>
+"""
+
+# 5. Salvar o arquivo final
+with open('relatorio_biomarcadores.html', 'w', encoding='utf-8') as f:
+    f.write(html_template)
+
+print("Arquivo 'relatorio_biomarcadores.html' gerado com sucesso!")
+```
 <img src="https://github.com/user-attachments/assets/814340f4-9feb-4a52-9df9-d10ea2cc9a99" width="268" height="268" alt="image" />
 
