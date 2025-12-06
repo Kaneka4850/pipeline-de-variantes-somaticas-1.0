@@ -230,83 +230,179 @@ print("Job deletado com sucesso")
 ## EXTRA: (Gerar um HTML pra não ter que ficar lendo todo o biomarker, pois ele é muito grande)
 ```Python
 import pandas as pd
+import json
+from google.colab import files
 
-# 1. Carregar o arquivo (ajuste o caminho se necessário)
-file_path = 'biomarkers.tsv' 
-df = pd.read_csv(file_path, sep='\t')
+# 1. Carregamento dos Dados com Pandas
+try:
+    df_alt = pd.read_csv('alterations.tsv', sep='\t')
+    df_bio = pd.read_csv('biomarkers.tsv', sep='\t')
+    
+    print("✅ Arquivos carregados com sucesso!")
+except FileNotFoundError:
+    print("❌ Erro: Por favor, faça o upload dos arquivos")
+    raise
 
-# 2. Função para colorir a coluna 'Response'
-def format_response(val):
-    val_str = str(val).lower()
-    if 'resistant' in val_str:
-        # Fundo vermelho claro, texto vermelho escuro
-        return f'<span style="color: #721c24; background-color: #f8d7da; padding: 4px; border-radius: 4px; font-weight: bold;">{val}</span>'
-    elif 'responsive' in val_str:
-        # Fundo verde claro, texto verde escuro
-        return f'<span style="color: #155724; background-color: #d4edda; padding: 4px; border-radius: 4px; font-weight: bold;">{val}</span>'
-    return val
+# 2. Limpeza e Pré-processamento
+# Substitui valores vazios (NaN) por string vazia para compatibilidade com JSON/HTML
+df_alt = df_alt.fillna('')
+df_bio = df_bio.fillna('')
 
-# 3. Função para transformar URLs em links clicáveis
-def format_links(val):
-    if str(val).startswith('http'):
-        return f'<a href="{val}" target="_blank" style="text-decoration: none; color: #007bff;">🔗 Link</a>'
-    return val
 
-# Aplicar as formatações
-# Nota: Fazemos isso convertendo para string HTML antes de gerar a tabela final
-if 'Response' in df.columns:
-    df['Response'] = df['Response'].apply(format_response)
+# 3. Conversão para JSON
+# O Pandas faz isso nativamente, facilitando muito a injeção no HTML
+json_alt = df_alt.to_json(orient='records')
+json_bio = df_bio.to_json(orient='records')
 
-if 'Evidence' in df.columns:
-    df['Evidence'] = df['Evidence'].apply(format_links)
-
-# 4. Gerar o HTML com DataTables (Biblioteca JS para interatividade)
-html_template = f"""
+# 4. Template HTML (A estrutura visual do relatório)
+html_template = """
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Biomarcadores</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Genômico (Gerado via Pandas)</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <style>
-        body {{ padding: 20px; font-family: sans-serif; background-color: #f8f9fa; }}
-        .container-fluid {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }}
-        h2 {{ margin-bottom: 20px; color: #333; }}
-        table {{ width: 100% !important; font-size: 0.9em; }}
+        :root { --bg: #f4f7f6; --card: #fff; --text: #333; --accent: #3498db; }
+        [data-theme="dark"] { --bg: #1a1a1a; --card: #2d2d2d; --text: #e0e0e0; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        h2 { border-left: 4px solid var(--accent); padding-left: 10px; margin-top: 0; }
+        
+        /* Badges */
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
+        .oncogenic { background: #ffebee; color: #c0392b; border: 1px solid #c0392b; }
+        .passenger { background: #f0f2f5; color: #7f8c8d; border: 1px solid #bdc3c7; }
+        .responsive { background: #e8f5e9; color: #27ae60; border: 1px solid #27ae60; }
+        .resistant { background: #ffebee; color: #c0392b; border: 1px solid #c0392b; }
+        .evidence { display: inline-block; width: 25px; height: 25px; text-align: center; background: var(--accent); color: white; border-radius: 50%; line-height: 25px; }
+
+        /* Controls */
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: var(--card); padding: 15px; border-radius: 8px; }
+        select { padding: 8px; }
+        
+        /* Dark Mode overrides for DataTables */
+        [data-theme="dark"] .dataTables_wrapper { color: #a0a0a0; }
+        [data-theme="dark"] table.dataTable tbody tr { background-color: var(--card); }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <h2>🧬 Relatório de Biomarcadores e Resposta a Drogas</h2>
-        <div class="table-responsive">
-            {df.to_html(classes='table table-striped table-hover table-bordered', index=False, escape=False, table_id='biomarkerTable')}
-        </div>
+
+<div class="container">
+    <div class="controls">
+        <h1>🧬 Dashboard Genômico</h1>
+        <select id="sampleSelect"><option value="">Todas as Amostras</option></select>
+        <label><input type="checkbox" id="relevantOnly"> Apenas Relevantes</label>
+        <button onclick="toggleTheme()">Alternar Tema</button>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script>
-        $(document).ready(function() {{
-            $('#biomarkerTable').DataTable({{
-                "language": {{
-                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+    <div class="card">
+        <h2>🔬 Variantes (Alterations)</h2>
+        <table id="altTable" class="display" style="width:100%">
+            <thead><tr><th>Sample</th><th>Gene</th><th>Protein</th><th>Type</th><th>Summary</th><th>Prediction</th></tr></thead>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>💊 Biomarcadores (Biomarkers)</h2>
+        <table id="bioTable" class="display" style="width:100%">
+            <thead><tr><th>Sample</th><th>Alteration</th><th>Drug</th><th>Disease</th><th>Response</th><th>Evidence</th></tr></thead>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+<script>
+    // DADOS INJETADOS PELO PYTHON/PANDAS
+    const altData = __ALT_JSON__;
+    const bioData = __BIO_JSON__;
+
+    let altTable, bioTable;
+
+    function init() {
+        // Popular Select
+        const samples = [...new Set([...altData.map(d => d['SAMPLE']), ...bioData.map(d => d['Sample ID'])])].sort();
+        const select = document.getElementById('sampleSelect');
+        samples.forEach(s => { if(s) select.innerHTML += `<option value="${s}">${s}</option>`; });
+
+        // Tabela Variantes
+        altTable = $('#altTable').DataTable({
+            data: altData,
+            columns: [
+                { data: 'SAMPLE' }, { data: 'CGI-Gene' }, { data: 'CGI-Protein Change' }, { data: 'CGI-Type' },
+                { data: 'CGI-Oncogenic Summary', render: d => {
+                    const isOnco = (d||'').toLowerCase().includes('oncogenic') && !(d||'').toLowerCase().includes('non-oncogenic');
+                    return `<span class="badge ${isOnco ? 'oncogenic' : 'passenger'}">${d}</span>`;
                 }},
-                "pageLength": 15,
-                "order": [[ 5, "asc" ]] // Ordena inicialmente pela coluna Response
-            }});
-        }});
-    </script>
+                { data: 'CGI-Oncogenic Prediction' }
+            ]
+        });
+
+        // Tabela Biomarcadores
+        bioTable = $('#bioTable').DataTable({
+            data: bioData,
+            columns: [
+                { data: 'Sample ID' }, { data: 'Alterations' }, { data: 'Drugs' }, { data: 'Diseases' },
+                { data: 'Response', render: d => {
+                    const isRes = (d||'').toLowerCase().includes('resistant');
+                    return `<span class="badge ${isRes ? 'resistant' : 'responsive'}">${d}</span>`;
+                }},
+                { data: 'Evidence', render: d => `<span class="evidence">${d}</span>` }
+            ]
+        });
+
+        // Listeners
+        $('#sampleSelect, #relevantOnly').on('change', () => { altTable.draw(); bioTable.draw(); });
+        
+        // Filtro Customizado
+        $.fn.dataTable.ext.search.push((settings, data, idx, row) => {
+            const sample = $('#sampleSelect').val();
+            const relevant = $('#relevantOnly').is(':checked');
+            
+            // Filtro de Amostra
+            const rowSample = settings.nTable.id === 'altTable' ? row['SAMPLE'] : row['Sample ID'];
+            if (sample && rowSample !== sample) return false;
+
+            // Filtro de Relevância
+            if (relevant) {
+                if (settings.nTable.id === 'altTable') {
+                    const summ = (row['CGI-Oncogenic Summary']||'').toLowerCase();
+                    const pred = (row['CGI-Oncogenic Prediction']||'').toLowerCase();
+                    if (!pred.includes('driver') && !(summ.includes('oncogenic') && !summ.includes('non-oncogenic'))) return false;
+                } else {
+                    if (row['Evidence'] !== 'A' && row['Evidence'] !== 'B') return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    }
+
+    $(document).ready(init);
+</script>
 </body>
 </html>
 """
 
-# 5. Salvar o arquivo final
-with open('relatorio_biomarcadores.html', 'w', encoding='utf-8') as f:
-    f.write(html_template)
+# 5. Injeção e Salvamento
+# Substituímos os placeholders __ALT_JSON__ e __BIO_JSON__ pelos dados reais do Pandas
+final_html = html_template.replace('__ALT_JSON__', json_alt).replace('__BIO_JSON__', json_bio)
 
-print("Arquivo 'relatorio_biomarcadores.html' gerado com sucesso!")
+output_filename = 'relatorio_pandas_genomica.html'
+with open(output_filename, 'w', encoding='utf-8') as f:
+    f.write(final_html)
+
+print(f"✅ Arquivo '{output_filename}' gerado com sucesso!")
+
+# 6. Download Automático
+files.download(output_filename)
 ```
 <img src="https://github.com/user-attachments/assets/814340f4-9feb-4a52-9df9-d10ea2cc9a99" width="268" height="268" alt="image" />
 
