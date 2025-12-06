@@ -1,5 +1,8 @@
 # Pipeline somatico - DO VCF Anotado ao CGI (Câncer Genome Interpreter)
 
+# 1 - Como obter o Token no CGI:
+# https://www.cancergenomeinterpreter.org/rest_api
+
 ## Passo 1: Clonar o GitHub do LMA Brasil, seguindo o comando para que ele funcione
 ```bash
 git clone https://github.com/renatopuga/lmabrasil-hg38.git
