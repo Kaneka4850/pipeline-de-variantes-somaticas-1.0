@@ -59,7 +59,10 @@ r.json()
 ```
 <img width="901" height="257" alt="image" src="https://github.com/user-attachments/assets/3a10b7ef-5059-4d91-ab4a-15473ca9468a" />
 Resultado esperado via Google Collab
+
+
 ## Passo 6: Fazendo o Download dos arquivos
+
 - Obs: Você ta mudando o Token e o Job_Id né?
 ```Python
 import requests
@@ -77,8 +80,15 @@ with open('sample01.zip', 'wb') as fd:
 ```Bash
 unzip sample01.zip # comando para descompactar
 ```
+
+
 <img width="339" height="98" alt="image" src="https://github.com/user-attachments/assets/fa186ee0-4347-408f-ba37-bc728bb5270a" />
-Resultado esperado: <img width="280" height="206" alt="image" src="https://github.com/user-attachments/assets/bc7b8e66-8ff4-494d-946c-db956e0deef1" />
+
+
+
+Resultado esperado:
+
+<img width="280" height="206" alt="image" src="https://github.com/user-attachments/assets/bc7b8e66-8ff4-494d-946c-db956e0deef1" />
 
 
 ## Passo 8: Verificando o resultado das alterações: arquivo alterations.tsv
@@ -133,9 +143,12 @@ cp /content/summary.txt $MeuDrive # sumario
 import requests
 job_id = id individual
 
-headers = {'Authorization': 'kaneka4850@gmail.com c617eeb5f78dc078813f'} # permissões do CGI
+headers = {'Authorization': 'kaneka4850@gmail.com Seu_Token'} # permissões do CGI
 r = requests.delete('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers)
 r.json() 
 
 print("Job deletado com sucesso") 
 ```
+
+<img src="https://github.com/user-attachments/assets/814340f4-9feb-4a52-9df9-d10ea2cc9a99" width="268" height="268" alt="image" />
+
