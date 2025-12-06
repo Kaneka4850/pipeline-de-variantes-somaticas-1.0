@@ -96,7 +96,6 @@ Resultado esperado:
 
 ## Passo 8: Verificando o resultado das alterações: arquivo alterations.tsv
 ```Python
-# BAIXA A MERDA DO PANDAS ANTES
 import pandas as pd
 pd.read_csv('/content/alterations.tsv',sep='\t',index_col=False, engine= 'python')
 ```
