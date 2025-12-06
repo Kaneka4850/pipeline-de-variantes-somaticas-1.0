@@ -3,6 +3,9 @@
 # 1 - Como obter o Token no CGI:
 # https://www.cancergenomeinterpreter.org/rest_api
 
+<img width="1919" height="427" alt="image" src="https://github.com/user-attachments/assets/5eed1fda-b2fe-4bfd-b553-814214d71f0b" />
+Desce até o final da pagina e pega o Token (Não esquece de fazer o Login)
+
 ## Passo via collab: Caso queira fazer via Google Collab, só baixar esse arquivo aqui. Ele ta pronto pra uso, pode confiar :) (é um print, não tenta baixar pela imagem)
 <img width="395" height="46" alt="image" src="https://github.com/user-attachments/assets/3573f900-78c8-49b9-941a-0d430f948e4a" />
 
