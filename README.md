@@ -3,6 +3,10 @@
 # 1 - Como obter o Token no CGI:
 # https://www.cancergenomeinterpreter.org/rest_api
 
+## Passo via collab: Caso queira fazer via Google Collab, só baixar esse arquivo aqui. Ele ta pronto pra uso, pode confiar :) (é um print, não tenta baixar pela imagem)
+<img width="395" height="46" alt="image" src="https://github.com/user-attachments/assets/3573f900-78c8-49b9-941a-0d430f948e4a" />
+
+
 ## Passo 1: Clonar o GitHub do LMA Brasil, seguindo o comando para que ele funcione
 ```bash
 git clone https://github.com/renatopuga/lmabrasil-hg38.git
