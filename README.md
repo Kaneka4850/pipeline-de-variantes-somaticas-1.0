@@ -13,7 +13,8 @@ cut -f1-4 /content/lmabrasil-hg38/vep_output/liftOver_WP048_hg19ToHg38.vep.filte
 head df_WP048-cgi.txt
 ```
 ### Output esperado:
-<img width="1212" height="188" alt="image" src="https://github.com/user-attachments/assets/9c165a86-59cd-4132-b39f-a35f2d851f45" />
+<img width="326" height="65" alt="image" src="https://github.com/user-attachments/assets/791aeca8-df4a-46a7-bfc9-3826b0d6591b" />
+
 - Resultado esperado: fonte Google Collab
 
 ## Passo 3: Enviando um request "requisição" a API do CGI
