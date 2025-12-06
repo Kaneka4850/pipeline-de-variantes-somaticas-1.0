@@ -1,0 +1,29 @@
+===============================
+=== Summary of the analysis ===
+===============================
+
+=== CGI-ANALYSIS ===
+Analysis Code: Somatic MF
+Analysis ID: 314a1ffb93d1bb435a3e
+CGI version: v23.12.2
+Date: 2025-12-06 15:06:17
+
+=== INPUT ===
+Analysed mutations: 2
+Analysed cnas: 0
+Analysed fusions: 0
+Total samples: 1
+Cancer type: HEMATO
+Reference genome: hg38
+
+=== ALTERATIONS ===
+Driver mutations: 2
+Predicted and annotated drivers: 1
+Predicted drivers: 0
+Annotated drivers: 1
+
+=== BIOMARKERS ===
+Biomarkers in cancer type: 9
+Biomarkers in cancer type - Level A: 1
+Biomarkers in other cancer type: 70
+
