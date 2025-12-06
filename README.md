@@ -9,11 +9,38 @@ git clone https://github.com/renatopuga/lmabrasil-hg38.git
 ```
 ## Passo 2: Usar o comando para filtrar o arquivo, deixando ele aceitavel para o GCI
 ```bash
-cut -f1-4 /content/lmabrasil-hg38/vep_output/liftOver_WP048_hg19ToHg38.vep.filter.tsv | sed -e "s/CHROM/CHR/g"  > df_WP048-cgi.txt
+OUTPUT="df_WPALL-cgi.txt"
+
+
+FIRST_FILE=$(ls /content/lmabrasil-hg38/vep_output/liftOver_WP*_hg19ToHg38.vep.filter.tsv | head -n 1)
+
+l
+cut -f1-4 "$FIRST_FILE" | head -n 1 | sed -e "s/CHROM/CHR/g" | awk '{print $0"\tSAMPLE"}' > "$OUTPUT"
+
+# 2. PROCESSAR E JUNTAR OS DADOS
+
+for FILE in /content/lmabrasil-hg38/vep_output/liftOver_WP*_hg19ToHg38.vep.filter.tsv; do
+
+    # Extrai o ID da amostra (ex: WP017) do nome do arquivo usando grep
+    SAMPLE_ID=$(basename "$FILE" | grep -o "WP[0-9]\+")
+
+    cut -f1-4 "$FILE" | tail -n +2 | awk -v id="$SAMPLE_ID" -v OFS="\t" '{print $0, id}' >> "$OUTPUT"
+
+done
+
+# 3. VERIFICAÇÃO
+echo "Arquivo gerado: $OUTPUT"
+echo "Primeiras 5 linhas:"
+head -n 5 "$OUTPUT"
+echo "----------------"
+echo "Contagem de linhas por amostra no arquivo final:"
+# Isso mostra quantas linhas de cada WP ficaram no arquivo final
+cut -f5 "$OUTPUT" | sort | uniq -c
 head df_WP048-cgi.txt
 ```
 ### Output esperado:
-<img width="326" height="65" alt="image" src="https://github.com/user-attachments/assets/791aeca8-df4a-46a7-bfc9-3826b0d6591b" />
+<img width="431" height="141" alt="image" src="https://github.com/user-attachments/assets/a5c960e3-e593-4a1d-8021-785459471df7" />
+
 
 - Resultado esperado: fonte Google Collab
 
@@ -24,12 +51,12 @@ Esse código em python permite realizar a requisição a API via código PYTHON,
 import requests
 # cabeçalho 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_TOKEN'}
-payload = {'cancer_type': 'HEMATO', 'title': 'Somatic MF', 'reference': 'hg38'}
+payload = {'cancer_type': 'HEMATO', 'title': 'Somatic ALL', 'reference': 'hg38'}
 # requisição
 r = requests.post('https://www.cancergenomeinterpreter.org/api/v1',
                 headers=headers,
                 files={
-                        'mutations': open('/content/df_WP048-cgi.txt', 'rb')
+                        'mutations': open('/content/df_WPALL-cgi.txt', 'rb')
                         },
                 data=payload)
 r.json() # Formato json para verificação
@@ -75,14 +102,14 @@ job_id = # id individual
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_Token'} # permissões do CGI
 payload={'action':'download'} # passando o que é pra ele fazer
 r = requests.get('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers, params=payload) # requisições
-with open('sample01.zip', 'wb') as fd:
+with open('sample01.final', 'wb') as fd:
     fd.write(r._content)
 ```
 - Esse não vai gerar output, então não fica triste, não dando erro é o que importa
 ## Passo 7: 7. Descompactar o .zip utilizando unzip.
 
 ```Bash
-unzip sample01.zip # comando para descompactar
+unzip -o samplefinal.zip # Esse -o ignora se ja tiver alguma amostra feita antes
 ```
 
 
@@ -100,29 +127,77 @@ Resultado esperado:
 import pandas as pd
 pd.read_csv('/content/alterations.tsv',sep='\t',index_col=False, engine= 'python')
 ```
-| Input ID | CHROMOSOME | POSITION | REF | ALT | CHR | POS | ALT_TYPE | STRAND | CGI-Sample ID | CGI-Oncogenic Prediction | CGI-External oncogenic annotation | CGI-Mutation | CGI-Consequence | CGI-Transcript | CGI-STRAND | CGI-Type | CGI-HGVS | CGI-HGVSc | CGI-HGVSp |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| input01_1 | 1 | 114716123 | C | T | chr1 | 114716123 | snp | + | input01 | driver (boostDM: non-tissue-specific model) | cgi,oncokb,clinvar:13901 | chr1:114716123 C>T | missense_variant | ENST00000369535 | + | SNV | ENST00000369535:c.38G>A;p.(Gly13Asp);p.(G13D) | ENST00000369535.5:c.38G>A | ENSP00000358548.4:p.Gly13Asp |
-| input01_2 | 9 | 5073770 | G | T | chr9 | 5073770 | snp | + | input01 | passenger (oncodriveMUT) | cgi,oncokb,clinvar:14662 | chr9:5073770 G>T | missense_variant | ENST00000381652 | + | SNV | ENST00000381652:c.1849G>T;p.(Val617Phe);p.(V617F) | ENST00000381652.4:c.1849G>T | ENSP00000371067.4:p.Val617Phe |
+### Tabela de Variantes (CGI Output)
+
+| SAMPLE | CHR | POSITION | REF | ALT | CGI Prediction | Consequence | HGVSp (Proteína) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **WP017** | chr1 | 114716127 | C | T | **driver (boostDM)** | missense | p.Gly12Ser (G12S) |
+| **WP017** | chr1 | 152304661 | G | C | passenger | missense | p.Arg3409Gly |
+| **WP017** | chr11 | 115209621 | G | A | passenger | missense | p.Thr344Ile |
+| **WP017** | chr12 | 132140028 | C | T | non-protein affecting | intron | p(?) |
+| **WP017** | chr14 | 24119817 | G | A | passenger | missense | p.Arg338His |
+| **WP017** | chr14 | 59727407 | G | A | passenger | missense | p.Ala426Val |
+| **WP017** | chr15 | 24675943 | G | A | passenger | missense | p.Ala26Thr |
+| **WP017** | chr16 | 67616834 | G | A | **driver (oncodriveMUT)** | missense | p.Glu348Lys |
+| **WP017** | chr16 | 71389851 | G | A | passenger | missense | p.Glu268Lys |
+| **WP017** | chr16 | 74452195 | A | C | non-protein affecting | intron | p(?) |
+| **WP017** | chr19 | 35673516 | A | C | passenger | missense | p.Thr147Pro |
+| **WP017** | chr19 | 45319445 | T | G | non-protein affecting | intron | p(?) |
+| **WP017** | chr2 | 137450992 | G | A | passenger | missense | p.Arg1036Gln |
+| **WP017** | chr2 | 218880905 | A | C | non-protein affecting | 5_prime_UTR | p(?) |
+| **WP017** | chr21 | 41901750 | C | T | passenger | splice_acceptor | p(?) |
+| **WP017** | chr21 | 43094667 | T | G | **driver (boostDM)** | missense | p.Gln157Pro |
+| **WP017** | chr3 | 133380804 | G | A | passenger | missense | p.Asp365Asn |
+| **WP017** | chr7 | 584561 | G | A | passenger | missense | p.Thr239Met |
+| **WP019** | chr1 | 16031913 | G | A | non-protein affecting | intron | p(?) |
+| **WP019** | chr1 | 149073703 | C | T | non-protein affecting | intron | p(?) |
+| **WP019** | chr17 | 76736877 | G | T | **driver (oncodriveMUT)** | missense | p.Pro95His |
+| **WP019** | chr2 | 113117932 | G | T | non-protein affecting | 5_prime_UTR | p(?) |
+| **WP019** | chr4 | 2341569 | G | C | passenger | missense | p.Pro76Arg |
+| **WP019** | chr6 | 158130554 | A | C | non-protein affecting | intron | p(?) |
+| **WP019** | chr7 | 111783014 | G | A | non-protein affecting | intron | p(?) |
+| **WP048** | chr1 | 114716123 | C | T | **driver (boostDM)** | missense | p.Gly13Asp (G13D) |
+| **WP048** | chr9 | 5073770 | G | T | passenger (oncodriveMUT)* | missense | p.Val617Phe (V617F) |
+| **WP058** | chr12 | 57185563 | T | G | passenger | missense | p.Cys2166Gly |
+| **WP058** | chr15 | 28272094 | A | G | non-protein affecting | intron | p(?) |
+| **WP058** | chr15 | 43206304 | T | G | non-protein affecting | intron | p(?) |
+| **WP058** | chr19 | 12943751 | (del) | - | **driver (oncodriveMUT)** | frameshift | p.Leu367ThrfsTer46 |
+| **WP058** | chr2 | 105892889 | T | G | non-protein affecting | intron | p(?) |
+| **WP058** | chr20 | 32434638 | - | G | **driver (oncodriveMUT)** | frameshift | p.Gly646TrpfsTer12 |
+| **WP058** | chr7 | 124892275 | T | C | passenger | missense | p.Lys39Glu |
+| **WP068** | chr1 | 2498679 | T | G | non-protein affecting | intron | p(?) |
+| **WP068** | chr11 | 17388932 | A | C | non-protein affecting | upstream_gene | p(?) |
+| **WP068** | chr11 | 56290914 | C | T | passenger | missense | p.Arg50His |
+| **WP068** | chr14 | 30877438 | T | G | non-protein affecting | intron | p(?) |
+| **WP068** | chr19 | 49441413 | T | C | non-protein affecting | 5_prime_UTR | p(?) |
+| **WP068** | chr21 | 37147717 | A | C | non-protein affecting | intron | p(?) |
+| **WP068** | chr4 | 54733155 | A | T | **driver (boostDM)** | missense | p.Asp816Val (D816V) |
+| **WP068** | chr4 | 105276128 | T | C | **driver (oncodriveMUT)** | missense | p.Ile1894Thr |
+| **WP068** | chr4 | 155903714 | G | T | non-protein affecting | 5_prime_UTR | p(?) |
+| **WP068** | chr7 | 47837003 | G | A | passenger | missense | p.Thr1954Met |
+| **WP068** | chr7 | 151045303 | C | T | passenger | missense | p.Pro721Leu |
+
+> \*Nota: Para a amostra WP048, a variante V617F (JAK2) foi classificada como "passenger" pelo oncodriveMUT, mas é uma variante canônica de mielofibrose/trombocitemia.
 
 ## Passo 9: Verificando o biomarcador (arquivo biomarkers.tsv)
 ```Python
 import pandas as pd
 pd.read_csv('/content/biomarkers.tsv',sep='\t',index_col=False, engine= 'python')
 ````
-| Sample ID | Alterations | Biomarker | Drugs | Diseases | Response | Evidence | Match | Source | BioM | Resist. | Tumor type |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| input01 | NRAS (G13D) | NRAS (12,13,59,61,117,146) | Cetuximab (EGFR mAb inhibitor) | Colorectal adenocarcinoma | Resistant | A | NO | PMID:24024839; PMID:20619739; PMID:23325582 | complete | NaN | COREAD |
-| input01 | NRAS (G13D) | NRAS (12,13,59,61,117,146) | Panitumumab (EGFR mAb inhibitor) | Colorectal adenocarcinoma | Resistant | A | NO | FDA guidelines | complete | NaN | COREAD |
-| input01 | JAK2 (V617F) | JAK2 (V617F) | Ruxolitinib (JAK inhibitor) | Myelofibrosis | Responsive | A | YES | FDA | complete | NaN | MY |
-| input01 | KRAS wildtype | KRAS wildtype | Panitumumab (EGFR mAb inhibitor) | Colorectal adenocarcinoma | Responsive | A | NO | FDA https://www.accessdata.fda.gov... | complete | 65.0 | COREAD |
-| input01 | KRAS wildtype | KRAS wildtype | Cetuximab (EGFR mAb inhibitor) | Colorectal adenocarcinoma | Responsive | A | NO | PMID: 19339720 | complete | 22.0 | COREAD |
-| ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
-| input01 | NRAS (G13D) | NRAS Q61R | Temozolomide | Cutaneous melanoma | Responsive | C | NO | https://civicdb.org/links/evidence_items/23 | only alteration type | NaN | CM |
-| input01 | NRAS (G13D) | NRAS Q61R | Cetuximab | Colorectal adenocarcinoma | Resistant | C | NO | https://civicdb.org/links/evidence_items/2184 | only alteration type | NaN | COREAD |
-| input01 | PIK3CA wildtype | PIK3CA Wildtype | Aspirin | Colorectal adenocarcinoma | Responsive | B | NO | https://civicdb.org/links/evidence_items/2038 | complete | NaN | COREAD |
-| input01 | TP53 wildtype | TP53 Wildtype | Cetuximab, Oxaliplatin, Capecitabine | Colorectal adenocarcinoma | Responsive | B | NO | https://civicdb.org/links/evidence_items/875 | complete | NaN | COREAD |
-| input01 | TP53 wildtype | TP53 Wildtype | Adjuvant Chemotherapy | Non-small cell lung | Responsive | B | NO | https://civicdb.org/links/evidence_items/1149 | complete | NaN | NSCLC |
+### Predição de Resposta a Drogas (Biomarkers)
+
+| Sample ID | Alteration | Drug | Disease | Response | Evidence Source |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **WP017** | NRAS (G12S) | Cetuximab | Colorectal adenocarcinoma | **Resistant** | PMID:24024839... |
+| **WP017** | NRAS (G12S) | Panitumumab | Colorectal adenocarcinoma | **Resistant** | FDA guidelines |
+| **WP017** | KRAS wildtype | Panitumumab | Colorectal adenocarcinoma | Responsive | FDA / Drug Label |
+| **WP017** | KRAS wildtype | Cetuximab | Colorectal adenocarcinoma | Responsive | PMID: 19339720 |
+| **WP017** | EGFR/ALK wt | Atezolizumab; Bevacizumab | NSCLC | Responsive | FDA Label |
+| **WP048** | NRAS (G13D) | Temozolomide | Cutaneous melanoma | Responsive | CIViC (Link) |
+| **WP048** | NRAS (G13D) | Cetuximab | Colorectal adenocarcinoma | **Resistant** | CIViC (Link) |
+| **WP048** | PIK3CA wt | Aspirin | Colorectal adenocarcinoma | Responsive | CIViC (Link) |
+| **WP048** | TP53 wt | Cetuximab, Oxaliplatin | Colorectal adenocarcinoma | Responsive | CIViC (Link) |
+| **WP048** | TP53 wt | Adjuvant Chemotherapy | NSCLC | Responsive | CIViC (Link) |
 ## Passo 10: Baixar o Google Drive, pra poder salvar os arquivos. (Pra não precisar ficar rodando tudo do 0 pra ver os arquivos)
 ```Python
 from google.colab import drive
