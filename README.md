@@ -102,7 +102,7 @@ cp /content/summary.txt $MeuDrive # sumario
 ## Passo 11: Deletando o Job no CGI (Opcional)
 ```Python
 import requests
- # job_id ="314a1ffb93d1bb435a3e"  id individual
+job_id = id individual
 
 headers = {'Authorization': 'kaneka4850@gmail.com c617eeb5f78dc078813f'} # permissões do CGI
 r = requests.delete('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers)
