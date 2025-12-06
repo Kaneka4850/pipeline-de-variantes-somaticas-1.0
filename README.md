@@ -68,7 +68,7 @@ Resultado esperado via google collab
 - Obs: Coloca o Token e seu Job_id aqui, não copia sem mudar não! :)
 ```Python
 import requests
-job_id = # Job-Id individual
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_TOKEN'}
 r = requests.get('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers)
@@ -81,7 +81,7 @@ Resultado esperado via google collab
 - Obs: Não esquece de arrumar o Token e o Job_id viu?
 ```Python
 import requests
-job_id = # Coloque seu Job_Id individual aqui
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_TOKEN'}
 payload={'action':'logs'}
@@ -97,7 +97,7 @@ Resultado esperado via Google Collab
 - Obs: Você ta mudando o Token e o Job_Id né?
 ```Python
 import requests
-job_id = # id individual
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_Token'} # permissões do CGI
 payload={'action':'download'} # passando o que é pra ele fazer
@@ -210,7 +210,7 @@ MeuDrive="/content/drive/MyDrive/PGBIOAGMAV/Somaticos/AulaPratica"
 mkdir -p $MeuDrive # Criar a pastinha no Drive
 cp /content/alterations.tsv $MeuDrive #alterações
 cp /content/biomarkers.tsv $MeuDrive # biomarcadores
-cp /content/df_WP048-cgi.txt $MeuDrive # amostra
+cp /content/df_WPALL-cgi.txt $MeuDrive # amostra
 cp /content/input01.tsv $MeuDrive # id
 cp /content/sample01.zip $MeuDrive # amostra
 cp /content/summary.txt $MeuDrive # sumario
@@ -237,7 +237,7 @@ from google.colab import files
 try:
     df_alt = pd.read_csv('alterations.tsv', sep='\t')
     df_bio = pd.read_csv('biomarkers.tsv', sep='\t')
-    
+
     print("✅ Arquivos carregados com sucesso!")
 except FileNotFoundError:
     print("❌ Erro: Por favor, faça o upload dos arquivos")
@@ -270,7 +270,7 @@ html_template = """
         .container { max-width: 1400px; margin: 0 auto; }
         .card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         h2 { border-left: 4px solid var(--accent); padding-left: 10px; margin-top: 0; }
-        
+
         /* Badges */
         .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
         .oncogenic { background: #ffebee; color: #c0392b; border: 1px solid #c0392b; }
@@ -282,7 +282,7 @@ html_template = """
         /* Controls */
         .controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: var(--card); padding: 15px; border-radius: 8px; }
         select { padding: 8px; }
-        
+
         /* Dark Mode overrides for DataTables */
         [data-theme="dark"] .dataTables_wrapper { color: #a0a0a0; }
         [data-theme="dark"] table.dataTable tbody tr { background-color: var(--card); }
@@ -356,12 +356,12 @@ html_template = """
 
         // Listeners
         $('#sampleSelect, #relevantOnly').on('change', () => { altTable.draw(); bioTable.draw(); });
-        
+
         // Filtro Customizado
         $.fn.dataTable.ext.search.push((settings, data, idx, row) => {
             const sample = $('#sampleSelect').val();
             const relevant = $('#relevantOnly').is(':checked');
-            
+
             // Filtro de Amostra
             const rowSample = settings.nTable.id === 'altTable' ? row['SAMPLE'] : row['Sample ID'];
             if (sample && rowSample !== sample) return false;
