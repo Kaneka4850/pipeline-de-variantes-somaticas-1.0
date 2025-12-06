@@ -1,0 +1,80 @@
+Sample ID	Alterations	Biomarker	Drugs	Diseases	Response	Evidence	Match	Source	BioM	Resist.	Tumor type
+input01	NRAS (G13D)	NRAS (12,13,59,61,117,146)	Cetuximab(EGFR mAb inhibitor)	Colorectal adenocarcinoma	Resistant	A	NO	PMID:24024839;PMID:20619739;PMID:23325582	complete		COREAD
+input01	NRAS (G13D)	NRAS (12,13,59,61,117,146)	Panitumumab(EGFR mAb inhibitor)	Colorectal adenocarcinoma	Resistant	A	NO	FDA guidelines	complete		COREAD
+input01	JAK2 (V617F)	JAK2 (V617F)	Ruxolitinib(JAK inhibitor)	Myelofibrosis	Responsive	A	YES	FDA	complete		MY
+input01	KRAS wildtype	KRAS wildtype	Panitumumab(EGFR mAb inhibitor)	Colorectal adenocarcinoma	Responsive	A	NO	FDA  https://www.accessdata.fda.gov/drugsatfda_docs/label/2021/125147s210lbl.pdf	complete	65.0	COREAD
+input01	KRAS wildtype	KRAS wildtype	Cetuximab(EGFR mAb inhibitor)	Colorectal adenocarcinoma	Responsive	A	NO	PMID: 19339720	complete	22.0	COREAD
+input01	EGFR wildtype, ALK wildtype	EGFR wildtype;ALK wildtype	Atezolizumab(PDL1 blocking antibody);Bevacizumab(VEGF mAb inhibitor);Paclitaxel(Chemotherapy);Carboplatin(Chemotherapy)	Non-small cell lung	Responsive	A	NO	FDA https://www.accessdata.fda.gov/drugsatfda_docs/label/2022/761034s047lbl.pdf	complete		NSCLC
+input01	EGFR wildtype, ALK wildtype	EGFR wildtype;ALK wildtype	Atezolizumab(PDL1 blocking antibody);Paclitaxel(Chemotherapy);Carboplatin(Chemotherapy)	Non-small cell lung	Responsive	A	NO	FDA https://www.accessdata.fda.gov/drugsatfda_docs/label/2022/761034s047lbl.pdf	complete		NSCLC
+input01	EGFR wildtype, ALK wildtype	EGFR wildtype;ALK wildtype	Pembrolizumab(PD-1-blocking antibody);Pemetrexed(Chemotherapy);Platinum(Chemotherapy)	Non-small cell lung	Responsive	A	NO	FDA https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/125514s136lbl.pdf	complete		NSCLC
+input01	EGFR wildtype, ALK wildtype	EGFR wildtype;ALK wildtype	Durvalumab(PD-1-blocking antibody);Tremelimumab-actl(CTLA-4 blocking antibody);Platinum(Chemotherapy)	Non-small cell lung	Responsive	A	NO	FDA https://www.fda.gov/drugs/resources-information-approved-drugs/fda-approves-tremelimumab-combination-durvalumab-and-platinum-based-chemotherapy-metastatic-non	complete		NSCLC
+input01	EGFR wildtype, ALK wildtype, ROS1 wildtype	EGFR wildtype;ALK wildtype;ROS1 wildtype	Cemiplimab-rwlc(PD-1-blocking antibody);Platinum(Chemotherapy)	Non-small cell lung	Responsive	A	NO	FDA https://www.fda.gov/drugs/resources-information-approved-drugs/fda-approves-cemiplimab-rwlc-combination-platinum-based-chemotherapy-non-small-cell-lung-cancer	complete		NSCLC
+input01	NRAS (G13D)	NRAS oncogenic mutation	Trametinib(MEK inhibitor)	Erdheim-Chester histiocytosis	Responsive	A	NO	NCCN https://www.nccn.org/professionals/physician_gls/pdf/histiocytic_neoplasms.pdf	complete		HISEC
+input01	NRAS (G13D)	NRAS oncogenic mutation	Cobimetinib(MEK inhibitor)	Erdheim-Chester histiocytosis	Responsive	A	NO	NCCN https://www.nccn.org/professionals/physician_gls/pdf/histiocytic_neoplasms.pdf	complete		HISEC
+input01	NRAS (G13D)	NRAS oncogenic mutation	Trametinib(MEK inhibitor)	Langerhans cell histiocytosis	Responsive	A	NO	NCCN https://www.nccn.org/professionals/physician_gls/pdf/histiocytic_neoplasms.pdf	complete		HISLC
+input01	NRAS (G13D)	NRAS oncogenic mutation	Cobimetinib(MEK inhibitor)	Langerhans cell histiocytosis	Responsive	A	NO	NCCN https://www.nccn.org/professionals/physician_gls/pdf/histiocytic_neoplasms.pdf	complete		HISLC
+input01	JAK2 (V617F)	JAK2 oncogenic mutation	PD1 inhibitors	Cutaneous melanoma	Resistant	C	NO	PMID:27433843	complete		CM
+input01	NRAS (G13D)	NRAS (Q61)	BRAF inhibitors	Cutaneous melanoma	Resistant	C	NO	PMID:23569304;PMID:24265153	only alteration type		CM
+input01	JAK2 (V617F)	JAK2 (V617F)	JAK inhibitor(alone or in combination)s	Acute myeloid leukemia	Responsive	D	YES	PMID:22829971	complete		AML
+input01	JAK2 (V617F)	JAK2 amplification	JAK inhibitors	Breast adenocarcinoma	Responsive	D	NO	PMID:27075627	only gene		BRCA
+input01	JAK2 (V617F)	JAK2-BRAF fusion	Ruxolitinib(JAK inhibitor)	Acute lymphoblastic leukemia	Responsive	D	YES	PMID:22875628;PMID:22899477	only gene		ALL
+input01	JAK2 (V617F)	JAK2 (V617F)	Ruxolitinib(JAK inhibitor)	Acute myeloid leukemia	Responsive	C	YES	PMID:22422826	complete		AML
+input01	KIT wildtype	KIT wildtype	Dasatinib(BCR-ABL inhibitor 2nd gen)	Gastrointestinal stromal	Responsive	D	NO	PMID:16397263	complete		GIST
+input01	KIT wildtype	KIT wildtype	Sorafenib(Pan-TK inhibitor)	Gastrointestinal stromal	Responsive	C	NO	ASCO 2011 (abstr 10009)	complete		GIST
+input01	KIT wildtype	KIT wildtype	Sunitinib(Pan-TK inhibitor)	Gastrointestinal stromal	Responsive	B	NO	PMID:18955458	complete		GIST
+input01	KIT wildtype	KIT wildtype	Imatinib(BCR-ABL inhibitor 1st gen&KIT inhibitor)	Gastrointestinal stromal	Resistant	B	NO	PMID:18955458	complete		GIST
+input01	PDGFRA wildtype	PDGFRA wildtype	Imatinib(BCR-ABL inhibitor 1st gen&KIT inhibitor)	Gastrointestinal stromal	Resistant	B	NO	PMID:14645423;PMID:18955458	complete		GIST
+input01	NRAS (G13D)	NRAS oncogenic mutation	CDK4/6 inhibitor + MEK inhibitors	Cutaneous melanoma	Responsive	C	NO	PMID:26658964;NCT01781572;NCT02065063;NCT02022982;ASCO 2014 (abstr 9009)	complete		CM
+input01	NRAS (G13D)	NRAS (G12C)	ERK inhibitors	Any cancer type	Responsive	D	YES	PMID:23614898	only alteration type		CANCER
+input01	NRAS (G13D)	NRAS oncogenic mutation	ERK inhibitors	Cutaneous melanoma	Responsive	C	NO	ASCO 2017 (abstr 2508)	complete		CM
+input01	NRAS (G13D)	NRAS oncogenic mutation	HSP90 inhibitors	Cutaneous melanoma	Responsive	D	NO	PMID:23538902	complete		CM
+input01	NRAS (G13D)	NRAS oncogenic mutation	MEK inhibitor +/- PI3K pathway inhibitors	Colorectal adenocarcinoma	Responsive	D	NO	PMID:23274911;PMID:22392911	complete		COREAD
+input01	NRAS (G13D)	NRAS oncogenic mutation	MEK inhibitors	Acute myeloid leukemia, Lung adenocarcinoma, Acute lymphoblastic leukemia	Responsive	D	YES	PMID:22507781;PMID:23515407;PMID:18701506	complete		AML, LUAD, ALL
+input01	NRAS (G13D)	NRAS (Q61)	MEK inhibitors	Cutaneous melanoma	Responsive	B	NO	PMID:23414587,ASCO 2016 (abstr 9500)	only alteration type		CM
+input01	NRAS (G13D)	NRAS oncogenic mutation	Pan-RAF inhibitors	Cutaneous melanoma	Responsive	C	NO	ESMO 2015 (abstract 300);AACR 2017 (abstr CT002)	complete		CM
+input01	NRAS (G13D)	NRAS oncogenic mutation	PI3K pathway inhibitor + MEK inhibitors	Myeloma	Responsive	D	YES	PMID:22985491	complete		MYMA
+input01	NRAS (G13D)	NRAS oncogenic mutation	Sorafenib + MEK inhibitor(Pan-TK inhibitor + MEK inhibitor)	Hepatic carcinoma	Responsive	C	NO	PMID:25294897	complete		HC
+input01	PDGFRA wildtype	PDGFRA wildtype	Dasatinib(BCR-ABL inhibitor 2nd gen)	Gastrointestinal stromal	Responsive	D	NO	PMID:16397263	complete		GIST
+input01	PDGFRA wildtype	PDGFRA wildtype	Sorafenib(Pan-TK inhibitor)	Gastrointestinal stromal	Responsive	C	NO	ASCO 2011 (abstr 10009)	complete		GIST
+input01	PDGFRA wildtype	PDGFRA wildtype	Sunitinib(Pan-TK inhibitor)	Gastrointestinal stromal	Responsive	B	NO	PMID:18955458	complete		GIST
+input01	TP53 wildtype	TP53 wildtype	HDM2 inhibitors	Acute myeloid leukemia	Responsive	C	YES	AACR 2017 (abstr CT152)	complete		AML
+input01	NRAS (G13D)	NRAS oncogenic mutation	Vemurafenib(BRAF inhibitor)	Cutaneous melanoma	Resistant	D	NO	PMID:20179705	complete		CM
+input01	NRAS (G13D)	NRAS (Q61K,T50I,G13D,G60E,G12C,G12V,T58I,.,Q61H,G12R,G12D,Q61L,G13V,Q61R)	Panitumumab + Cetuximab	Colorectal adenocarcinoma	Resistant	A	NO	oncokb: oncokb=https://www.oncokb.org/gene/NRAS	complete		COREAD
+input01	NRAS (G13D)	NRAS (Q61K,T50I,G13D,G60E,G12C,G12V,T58I,.,Q61H,G12R,G12D,Q61L,G13V,Q61R)	Binimetinib + Binimetinib + Ribociclib	Cutaneous melanoma	Responsive	C	NO	oncokb: oncokb=https://www.oncokb.org/gene/NRAS	complete		CM
+input01	JAK2 (V617F)	JAK2-PCM1 fusion	Ruxolitinib	Eosinophilic chronic leukemia	Responsive	C	YES	oncokb: oncokb=https://www.oncokb.org/gene/JAK2	only gene		ECL
+input01	NRAS (G13D)	NRAS (Q61K,T50I,G13D,G60E,G12C,G12V,T58I,.,Q61H,G12R,G12D,Q61L,G13V,Q61R)	Selumetinib	Thyroid carcinoma	Responsive	C	NO	oncokb: oncokb=https://www.oncokb.org/gene/NRAS	complete		THCA
+input01	BRAF wildtype	BRAF WILD TYPE	MEK Inhibitor RO4987655	Cutaneous melanoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/995	complete		CM
+input01	EGFR wildtype	EGFR Wildtype	Gefitinib	Non-small cell lung	Resistant	B	NO	https://civicdb.org/links/evidence_items/2512	complete		NSCLC
+input01	JAK2 (V617F)	JAK2 Splice Site (c.1641+2T>G)	Pembrolizumab	Cutaneous melanoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/4825	only alteration type		CM
+input01	KIT wildtype	KIT WILDTYPE	Regorafenib	Gastrointestinal stromal	Responsive	B	NO	https://civicdb.org/links/evidence_items/4144	complete		GIST
+input01	KRAS wildtype	KRAS Wildtype	Regorafenib	Colorectal adenocarcinoma	Resistant	D	NO	https://civicdb.org/links/evidence_items/8840	complete		COREAD
+input01	NRAS (G13D)	NRAS G12C	Cetuximab,Chemotherapy	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/3845	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS G12D	Irinotecan,Cetuximab	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/2002	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS G12D	Cetuximab	Colorectal adenocarcinoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/3693	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS G13D	Tanespimycin	Cutaneous melanoma	Responsive	C	NO	https://civicdb.org/links/evidence_items/21	complete		CM
+input01	NRAS (G13D)	NRAS G13R	Cetuximab,Irinotecan	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/2204	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS G13R	Panitumumab	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/3842	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Mutation	MEK Inhibitor RO4987655	Cutaneous melanoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/996	complete		CM
+input01	NRAS (G13D)	NRAS Mutation	Dabrafenib,Vemurafenib	Cutaneous melanoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/6263	complete		CM
+input01	NRAS (G13D)	NRAS Mutation	Trametinib	Cutaneous melanoma	Responsive	B	NO	https://civicdb.org/links/evidence_items/1227	complete		CM
+input01	NRAS (G13D)	NRAS Mutation	Trametinib,Omipalisib	Cutaneous melanoma	Responsive	D	NO	https://civicdb.org/links/evidence_items/1429	complete		CM
+input01	NRAS (G13D)	NRAS Mutation	Binimetinib	Cutaneous melanoma	Responsive	D	NO	https://civicdb.org/links/evidence_items/1509	complete		CM
+input01	NRAS (G13D)	NRAS Mutation	Cetuximab	Colorectal adenocarcinoma	Resistant	D	NO	https://civicdb.org/links/evidence_items/1703	complete		COREAD
+input01	NRAS (G13D)	NRAS Mutation	Cetuximab,Chemotherapy	Colorectal adenocarcinoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/2210	complete		COREAD
+input01	NRAS (G13D)	NRAS Mutation	Cetuximab,Panitumumab	Colorectal adenocarcinoma	Resistant	A	NO	https://civicdb.org/links/evidence_items/5344	complete		COREAD
+input01	NRAS (G13D)	NRAS Q179X	Cetuximab	Colorectal adenocarcinoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/4785	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61	Vemurafenib	Cutaneous melanoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/14	only alteration type		CM
+input01	NRAS (G13D)	NRAS Q61	Cetuximab,Chemotherapy	Colorectal adenocarcinoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/36	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61	Cetuximab	Colorectal adenocarcinoma	Resistant	B	NO	https://civicdb.org/links/evidence_items/124	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61H	Irinotecan,Cetuximab	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/3690	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61K	Cetuximab,Chemotherapy	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/2189	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61K	Selumetinib,Dactolisib	Colorectal adenocarcinoma	Responsive	D	NO	https://civicdb.org/links/evidence_items/2192	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61K	Everolimus,Binimetinib	Neuroblastoma	Responsive	D	NO	https://civicdb.org/links/evidence_items/1002	only alteration type		NB
+input01	NRAS (G13D)	NRAS Q61K	Selumetinib,Trametinib	Non-small cell lung	Responsive	D	NO	https://civicdb.org/links/evidence_items/2907	only alteration type		NSCLC
+input01	NRAS (G13D)	NRAS Q61L	Temozolomide	Cutaneous melanoma	Responsive	C	NO	https://civicdb.org/links/evidence_items/22	only alteration type		CM
+input01	NRAS (G13D)	NRAS Q61L	Cetuximab,Irinotecan	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/2181	only alteration type		COREAD
+input01	NRAS (G13D)	NRAS Q61R	Temozolomide	Cutaneous melanoma	Responsive	C	NO	https://civicdb.org/links/evidence_items/23	only alteration type		CM
+input01	NRAS (G13D)	NRAS Q61R	Cetuximab	Colorectal adenocarcinoma	Resistant	C	NO	https://civicdb.org/links/evidence_items/2184	only alteration type		COREAD
+input01	PIK3CA wildtype	PIK3CA Wildtype	Aspirin	Colorectal adenocarcinoma	Responsive	B	NO	https://civicdb.org/links/evidence_items/2038	complete		COREAD
+input01	TP53 wildtype	TP53 Wildtype	Cetuximab,Oxaliplatin,Capecitabine	Colorectal adenocarcinoma	Responsive	B	NO	https://civicdb.org/links/evidence_items/875	complete		COREAD
+input01	TP53 wildtype	TP53 Wildtype	Adjuvant Chemotherapy	Non-small cell lung	Responsive	B	NO	https://civicdb.org/links/evidence_items/1149	complete		NSCLC
