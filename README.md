@@ -21,7 +21,7 @@ OUTPUT="df_WPALL-cgi.txt"
 
 FIRST_FILE=$(ls /content/lmabrasil-hg38/vep_output/liftOver_WP*_hg19ToHg38.vep.filter.tsv | head -n 1)
 
-l
+
 cut -f1-4 "$FIRST_FILE" | head -n 1 | sed -e "s/CHROM/CHR/g" | awk '{print $0"\tSAMPLE"}' > "$OUTPUT"
 
 # 2. PROCESSAR E JUNTAR OS DADOS
@@ -43,7 +43,6 @@ echo "----------------"
 echo "Contagem de linhas por amostra no arquivo final:"
 # Isso mostra quantas linhas de cada WP ficaram no arquivo final
 cut -f5 "$OUTPUT" | sort | uniq -c
-head df_WP048-cgi.txt
 ```
 ### Output esperado:
 <img width="431" height="141" alt="image" src="https://github.com/user-attachments/assets/a5c960e3-e593-4a1d-8021-785459471df7" />
@@ -109,7 +108,7 @@ job_id = input("Digite seu job_id (Obtido na 3º célula)")
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_Token'} # permissões do CGI
 payload={'action':'download'} # passando o que é pra ele fazer
 r = requests.get('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers, params=payload) # requisições
-with open('sample01.final', 'wb') as fd:
+with open('samplefinal.zip', 'wb') as fd:
     fd.write(r._content)
 ```
 - Esse não vai gerar output, então não fica triste, não dando erro é o que importa
