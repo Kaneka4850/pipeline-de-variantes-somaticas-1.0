@@ -128,6 +128,18 @@ Resultado esperado:
 
 <img width="280" height="206" alt="image" src="https://github.com/user-attachments/assets/bc7b8e66-8ff4-494d-946c-db956e0deef1" />
 
+- input01.tsv
+Arquivo de entrada da análise. Contém as variantes somáticas fornecidas (gene, posição, alteração, tipo), geralmente derivadas de um VCF.
+
+- alterations.tsv
+Resultado da interpretação das variantes. Lista quais mutações foram detectadas, se são drivers, tipo de alteração e anotações funcionais/clínicas.
+
+- biomarkers.tsv
+Tabela de biomarcadores clínicos associados às variantes. Relaciona mutações a terapias, níveis de evidência e tipo de câncer (A, B, etc.).
+
+- summary.txt
+Resumo geral da análise. Traz metadados (tipo de câncer, genoma, versão do CGI) e contagens globais de variantes, drivers e biomarcadores.
+
 
 ## Passo 8: Verificando o resultado das alterações: arquivo alterations.tsv
 ```Python
