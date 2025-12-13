@@ -3,6 +3,13 @@
 # 1 - Como obter o Token no CGI:
 # https://www.cancergenomeinterpreter.org/rest_api
 
+<img width="1919" height="427" alt="image" src="https://github.com/user-attachments/assets/5eed1fda-b2fe-4bfd-b553-814214d71f0b" />
+Desce até o final da pagina e pega o Token (Não esquece de fazer o Login)
+
+## Passo via collab: Caso queira fazer via Google Collab, só baixar esse arquivo aqui. Ele ta pronto pra uso, pode confiar :) (é um print, não tenta baixar pela imagem)
+<img width="395" height="46" alt="image" src="https://github.com/user-attachments/assets/3573f900-78c8-49b9-941a-0d430f948e4a" />
+
+
 ## Passo 1: Clonar o GitHub do LMA Brasil, seguindo o comando para que ele funcione
 ```bash
 git clone https://github.com/renatopuga/lmabrasil-hg38.git
@@ -14,7 +21,7 @@ OUTPUT="df_WPALL-cgi.txt"
 
 FIRST_FILE=$(ls /content/lmabrasil-hg38/vep_output/liftOver_WP*_hg19ToHg38.vep.filter.tsv | head -n 1)
 
-l
+
 cut -f1-4 "$FIRST_FILE" | head -n 1 | sed -e "s/CHROM/CHR/g" | awk '{print $0"\tSAMPLE"}' > "$OUTPUT"
 
 # 2. PROCESSAR E JUNTAR OS DADOS
@@ -36,7 +43,6 @@ echo "----------------"
 echo "Contagem de linhas por amostra no arquivo final:"
 # Isso mostra quantas linhas de cada WP ficaram no arquivo final
 cut -f5 "$OUTPUT" | sort | uniq -c
-head df_WP048-cgi.txt
 ```
 ### Output esperado:
 <img width="431" height="141" alt="image" src="https://github.com/user-attachments/assets/a5c960e3-e593-4a1d-8021-785459471df7" />
@@ -68,7 +74,7 @@ Resultado esperado via google collab
 - Obs: Coloca o Token e seu Job_id aqui, não copia sem mudar não! :)
 ```Python
 import requests
-job_id = # Job-Id individual
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_TOKEN'}
 r = requests.get('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers)
@@ -81,7 +87,7 @@ Resultado esperado via google collab
 - Obs: Não esquece de arrumar o Token e o Job_id viu?
 ```Python
 import requests
-job_id = # Coloque seu Job_Id individual aqui
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_TOKEN'}
 payload={'action':'logs'}
@@ -97,12 +103,12 @@ Resultado esperado via Google Collab
 - Obs: Você ta mudando o Token e o Job_Id né?
 ```Python
 import requests
-job_id = # id individual
+job_id = input("Digite seu job_id (Obtido na 3º célula)")
 
 headers = {'Authorization': 'kaneka4850@gmail.com Seu_Token'} # permissões do CGI
 payload={'action':'download'} # passando o que é pra ele fazer
 r = requests.get('https://www.cancergenomeinterpreter.org/api/v1/%s' % job_id, headers=headers, params=payload) # requisições
-with open('sample01.final', 'wb') as fd:
+with open('samplefinal.zip', 'wb') as fd:
     fd.write(r._content)
 ```
 - Esse não vai gerar output, então não fica triste, não dando erro é o que importa
@@ -120,6 +126,18 @@ unzip -o samplefinal.zip # Esse -o ignora se ja tiver alguma amostra feita antes
 Resultado esperado:
 
 <img width="280" height="206" alt="image" src="https://github.com/user-attachments/assets/bc7b8e66-8ff4-494d-946c-db956e0deef1" />
+
+- input01.tsv
+Arquivo de entrada da análise. Contém as variantes somáticas fornecidas (gene, posição, alteração, tipo), geralmente derivadas de um VCF.
+
+- alterations.tsv
+Resultado da interpretação das variantes. Lista quais mutações foram detectadas, se são drivers, tipo de alteração e anotações funcionais/clínicas.
+
+- biomarkers.tsv
+Tabela de biomarcadores clínicos associados às variantes. Relaciona mutações a terapias, níveis de evidência e tipo de câncer (A, B, etc.).
+
+- summary.txt
+Resumo geral da análise. Traz metadados (tipo de câncer, genoma, versão do CGI) e contagens globais de variantes, drivers e biomarcadores.
 
 
 ## Passo 8: Verificando o resultado das alterações: arquivo alterations.tsv
@@ -210,7 +228,7 @@ MeuDrive="/content/drive/MyDrive/PGBIOAGMAV/Somaticos/AulaPratica"
 mkdir -p $MeuDrive # Criar a pastinha no Drive
 cp /content/alterations.tsv $MeuDrive #alterações
 cp /content/biomarkers.tsv $MeuDrive # biomarcadores
-cp /content/df_WP048-cgi.txt $MeuDrive # amostra
+cp /content/df_WPALL-cgi.txt $MeuDrive # amostra
 cp /content/input01.tsv $MeuDrive # id
 cp /content/sample01.zip $MeuDrive # amostra
 cp /content/summary.txt $MeuDrive # sumario
@@ -237,7 +255,7 @@ from google.colab import files
 try:
     df_alt = pd.read_csv('alterations.tsv', sep='\t')
     df_bio = pd.read_csv('biomarkers.tsv', sep='\t')
-    
+
     print("✅ Arquivos carregados com sucesso!")
 except FileNotFoundError:
     print("❌ Erro: Por favor, faça o upload dos arquivos")
@@ -270,7 +288,7 @@ html_template = """
         .container { max-width: 1400px; margin: 0 auto; }
         .card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         h2 { border-left: 4px solid var(--accent); padding-left: 10px; margin-top: 0; }
-        
+
         /* Badges */
         .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
         .oncogenic { background: #ffebee; color: #c0392b; border: 1px solid #c0392b; }
@@ -282,7 +300,7 @@ html_template = """
         /* Controls */
         .controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: var(--card); padding: 15px; border-radius: 8px; }
         select { padding: 8px; }
-        
+
         /* Dark Mode overrides for DataTables */
         [data-theme="dark"] .dataTables_wrapper { color: #a0a0a0; }
         [data-theme="dark"] table.dataTable tbody tr { background-color: var(--card); }
@@ -356,12 +374,12 @@ html_template = """
 
         // Listeners
         $('#sampleSelect, #relevantOnly').on('change', () => { altTable.draw(); bioTable.draw(); });
-        
+
         // Filtro Customizado
         $.fn.dataTable.ext.search.push((settings, data, idx, row) => {
             const sample = $('#sampleSelect').val();
             const relevant = $('#relevantOnly').is(':checked');
-            
+
             // Filtro de Amostra
             const rowSample = settings.nTable.id === 'altTable' ? row['SAMPLE'] : row['Sample ID'];
             if (sample && rowSample !== sample) return false;
