@@ -422,5 +422,349 @@ print(f"✅ Arquivo '{output_filename}' gerado com sucesso!")
 # 6. Download Automático
 files.download(output_filename)
 ```
+
+# PASSO DE CRIAÇÃO DOS TIERS
+Visando ter umm segundo critério de analise das variantes somáticas, usaremos agora criação de tiers, e no final realizar a comparação das amostras analisadas pelo cgi x critérios feitos aqui
+
+## 1.0 Criação das tabelas de Tiers (No ambiente do collab)
+Para garantir a automatização do processo, o script abaixo ira verificar todas as amostras (formato VCF) e realizar a conversão de tabelas no formato tsv, lembrando que deve ser instalado a ferramanta BCFtools para funciona!
+
+```bash
+!sudo apt install bcftools
+```
+Após a instalação do pacote, é possivel a rodar o script, lembrando que ele roda todos os arquivos que estiverem no diretório (pasta), então certifique-se de deixar todos os vcfs a serem analisados de uma unica vez
+```bash
+# Define o diretório onde os arquivos de entrada estão
+DIR_INPUT="lmabrasil-hg38/vep_output"
+
+# Define o diretório onde os arquivos de saída serão salvos
+DIR_OUTPUT="outputs"
+
+# Cria o diretório de saída (o -p garante que não dê erro se já existir)
+mkdir -p "$DIR_OUTPUT"
+
+# Inicia o loop
+for ARQUIVO in ${DIR_INPUT}/liftOver_WP*_hg19ToHg38.vep.vcf; do
+
+    # 1. Extrair o ID da amostra
+    NOME_BASE=$(basename "$ARQUIVO")
+    SAMPLE_ID=$(echo "$NOME_BASE" | cut -d'_' -f2)
+
+    # Define o caminho completo do arquivo de saída (agora dentro da pasta outputs)
+    OUTPUT_FILE="${DIR_OUTPUT}/liftOver_${SAMPLE_ID}_hg19ToHg38.vep.tsv"
+
+    echo "Processando amostra: ${SAMPLE_ID} -> salvando em ${OUTPUT_FILE}"
+
+    # 2. Criar o cabeçalho
+    bcftools +split-vep -l "$ARQUIVO" | \
+    cut -f2 | \
+    tr '\n\r' '\t' | \
+    awk '{print("CHROM\tPOS\tREF\tALT\t"$0"FILTER\tTumorID\tGT\tDP\tAD\tAF\tNormalID\tNGT\tNDP\tNAD\tNAF")}' \
+    > "$OUTPUT_FILE"
+
+    # 3. Adicionar as variantes
+    bcftools +split-vep \
+    -f '%CHROM\t%POS\t%REF\t%ALT\t%CSQ\t%FILTER\t[%SAMPLE\t%GT\t%DP\t%AD\t%AF\t]\n' \
+    -i 'FMT/DP>=20 && FMT/AF>=0.1' -d -A tab "$ARQUIVO" \
+    -p x >> "$OUTPUT_FILE"
+
+done
+
+echo "Processamento finalizado. Arquivos salvos em: ${DIR_OUTPUT}/"
+```
+note que o script vai filtrar por nome do arquivo, então verifique sempre os nomes dos vcfs
+## 2.0 Definição dos tiers de acordo com cada amostra
+Agora o próximo passo é fazer a definição dos tiers de cada amostra, sendo dividido em tier 1, tier 2 e tier 3, lembrando que o script analisa por amostra individualmente, então pode ter variaçõoes de desempenho conforme o número de amostras
+```python
+import pandas as pd
+import numpy as np
+import re
+import requests
+import glob
+import os
+
+# =========================
+# CONFIG
+# =========================
+INPUT_PATTERN = "outputs/liftOver_WP*_hg19ToHg38.vep.tsv"
+OUTPUT_DIR    = "outputs"
+
+# Caminho local (se você clonou o repo)
+LOCAL_DRIVER_PATH = "lmabrasil-hg38/hpo/Clonal_Hematopoiesis_driver_genes.txt"
+
+# URL de backup (caso não tenha o arquivo local)
+DRIVER_WEB_URL = "https://raw.githubusercontent.com/renatopuga/lmabrasil-hg38/refs/heads/main/hpo/Clonal_Hematopoiesis_driver_genes.txt"
+
+# =========================
+# FUNÇÕES
+# =========================
+def smart_read_tsv(path: str) -> pd.DataFrame:
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        header = f.readline().rstrip("\n")
+        cols = header.split("\t")
+        n = len(cols)
+        rows = []
+        for line in f:
+            line = line.rstrip("\n")
+            parts = line.split("\t")
+            if len(parts) > n:
+                parts = parts[:n-1] + ["\t".join(parts[n-1:])]
+            elif len(parts) < n:
+                parts = parts + [""] * (n - len(parts))
+            rows.append(parts)
+    return pd.DataFrame(rows, columns=cols)
+
+def pick_first_existing_col(df: pd.DataFrame, candidates):
+    for c in candidates:
+        if c in df.columns: return c
+    return None
+
+def parse_percent_vaf(x):
+    if x is None: return np.nan
+    s = str(x).strip()
+    if s in {"", ".", "NA", "NaN", "nan", "None"}: return np.nan
+    s = s.replace(",", ".").replace("%", "")
+    try:
+        v = float(s)
+    except:
+        return np.nan
+    return v * 100.0 if v <= 1.0 else v
+
+def filter_is_pass(x):
+    return str(x).strip().upper() == "PASS"
+
+def load_driver_genes(local_path, web_url):
+    content = ""
+    # 1. Tenta ler localmente
+    if os.path.exists(local_path):
+        print(f"Carregando genes do arquivo LOCAL: {local_path}")
+        try:
+            with open(local_path, "r") as f:
+                content = f.read()
+        except Exception as e:
+            print(f"Erro ao ler local: {e}. Tentando web...")
+
+    # 2. Se não conseguiu local, tenta web
+    if not content:
+        print(f"Baixando lista de genes da WEB: {web_url}")
+        try:
+            r = requests.get(web_url, timeout=30)
+            r.raise_for_status()
+            content = r.text
+        except Exception as e:
+            print(f"ERRO CRÍTICO: Não foi possível carregar os genes nem local nem web. {e}")
+            return set()
+
+    # Processa o texto
+    tokens = re.split(r"[\s,;]+", content.strip())
+    genes = {t.strip().upper() for t in tokens if t.strip() and not t.startswith("#")}
+    return genes
+
+# =========================
+# EXECUÇÃO PRINCIPAL
+# =========================
+
+# 1. Carrega Driver Genes (Híbrido)
+driver_genes = load_driver_genes(LOCAL_DRIVER_PATH, DRIVER_WEB_URL)
+
+print(f"Total de Driver Genes carregados: {len(driver_genes)}")
+if len(driver_genes) == 0:
+    print("!!! ALERTA: Lista de genes vazia. Todos os resultados serão Tier 3. Verifique os caminhos !!!")
+
+# 2. Busca arquivos
+file_list = glob.glob(INPUT_PATTERN)
+print(f"Encontrados {len(file_list)} arquivos para processar.\n")
+
+# 3. Loop
+for input_tsv in file_list:
+    filename = os.path.basename(input_tsv)
+    parts = filename.split('_')
+
+    # Pega o ID (WPxxx)
+    sample_id = parts[1] if len(parts) >= 2 else "UNKNOWN"
+    output_tsv = os.path.join(OUTPUT_DIR, f"{sample_id}-tier.tsv")
+
+    print(f"--> Processando: {sample_id}")
+
+    try:
+        df = smart_read_tsv(input_tsv)
+
+        # Mapeamento
+        gene_col     = pick_first_existing_col(df, ["SYMBOL", "Gene", "GENE", "HGNC"])
+        filter_col   = pick_first_existing_col(df, ["FILTER", "Filter"])
+        dp_col       = pick_first_existing_col(df, ["DP", "DP_tumor", "TUMOR_DP", "DEPTH"])
+        vaf_col      = pick_first_existing_col(df, ["VAF_tumor", "VAF", "AF", "TUMOR_AF"])
+        existing_col = pick_first_existing_col(df, ["Existing_variation", "ExistingVariation", "existing_variation"])
+
+        missing = [("SYMBOL", gene_col), ("FILTER", filter_col), ("DP", dp_col), ("VAF/AF", vaf_col), ("Existing_variation", existing_col)]
+        missing = [name for name, col in missing if col is None]
+
+        if missing:
+            print(f"   [PULANDO] Colunas faltando: {missing}")
+            continue
+
+        # Filtros
+        df["_GENE_UP"] = df[gene_col].astype(str).str.strip().str.upper()
+        df["_PASS"]    = df[filter_col].apply(filter_is_pass)
+        df["_DP"]      = pd.to_numeric(df[dp_col].astype(str).str.replace(",", ".", regex=False), errors="coerce").fillna(0).astype(int)
+        df["_VAF_PCT"] = df[vaf_col].apply(parse_percent_vaf)
+        df["_EXIST"]   = df[existing_col].astype(str)
+
+        base  = (df["_PASS"]) & (df["_DP"] >= 20) & (df["_VAF_PCT"] >= 10)
+
+        # Regras de Classificação
+        tier1 = base & (df["_GENE_UP"].isin(driver_genes))
+        tier2 = base & (~tier1) & (df["_EXIST"].str.contains(r"\bCOSV\b", flags=re.IGNORECASE, regex=True))
+        tier3 = ~(tier1 | tier2)
+
+        df["Tier"] = np.select([tier1, tier2, tier3], ["Tier 1", "Tier 2", "Tier 3"], default="Tier 3")
+
+        df.drop(columns=[c for c in df.columns if c.startswith("_")], inplace=True)
+        df.to_csv(output_tsv, sep="\t", index=False)
+
+        counts = df["Tier"].value_counts().to_dict()
+        print(f"    Salvo: {output_tsv} | Tiers: {counts}")
+
+    except Exception as e:
+        print(f"    [ERRO] {sample_id}: {e}")
+
+print("\nConcluído.")
+```
+## 3.0 Criação dos diagramas de venn de acordo com cada amostra analisada
+Após realizar a analise de todas as amostras, o proximo passo é realizar o comparativo com as analises feitas no GCI, lembrando que para que esse script funcione, ele espera além dos inputs (que são or arquivos gerados no script acima), uma referencia, no caso o arquivo alterations.tsv, sendo obtido no processo final do CGI, por conta disso, verifique de gerar o arquivo, caso contrario tera erro.
+
+```python
+import pandas as pd
+import re
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
+import glob
+import os
+
+# =========================
+# CONFIG
+# =========================
+ALTERATIONS_TSV = "/content/alterations.tsv"   # Arquivo fixo (CGI Drivers)
+INPUT_PATTERN   = "outputs/*-tier.tsv"         # Padrão dos arquivos gerados no passo anterior
+OUTPUT_DIR      = "outputs"                    # Onde salvar os gráficos e txts
+
+# =========================
+# FUNÇÕES
+# =========================
+def pick_first_existing_col(df, candidates):
+    for c in candidates:
+        if c in df.columns:
+            return c
+    return None
+
+def norm_chr(x):
+    s = str(x).strip()
+    if not s:
+        return s
+    # Normaliza para sempre ter "chr" (ex: "1" vira "chr1")
+    return s if s.lower().startswith("chr") else "chr" + s
+
+def make_var_id(df, chr_col, pos_col, ref_col, alt_col):
+    return (
+        df[chr_col].astype(str).map(norm_chr) + ":" +
+        df[pos_col].astype(str) + ":" +
+        df[ref_col].astype(str) + ":" +
+        df[alt_col].astype(str)
+    )
+
+# ========================================================
+# 1) CARREGAR DRIVER SET (alterations.tsv) - FEITO UMA VEZ SÓ
+# ========================================================
+print("Carregando base de Drivers (alterations.tsv)...")
+
+try:
+    alt = pd.read_csv(ALTERATIONS_TSV, sep="\t", dtype=str)
+
+    chr_col = pick_first_existing_col(alt, ["CHR", "CHROM", "#CHROM", "CHROMOSOME"])
+    pos_col = pick_first_existing_col(alt, ["POS", "POSITION"])
+    ref_col = pick_first_existing_col(alt, ["REF"])
+    alt_col = pick_first_existing_col(alt, ["ALT"])
+    pred_col = pick_first_existing_col(alt, ["CGI-Oncogenic Prediction", "CGI-Oncogenic Summary"])
+
+    missing = [("CHR", chr_col), ("POS", pos_col), ("REF", ref_col), ("ALT", alt_col), ("DriverColumn", pred_col)]
+    missing = [name for name, col in missing if col is None]
+    if missing:
+        raise ValueError(f"Faltando colunas no alterations.tsv: {missing}")
+
+    alt["VAR_ID"] = make_var_id(alt, chr_col, pos_col, ref_col, alt_col)
+
+    # Considera driver se a coluna CGI tiver a palavra "driver"
+    is_driver = alt[pred_col].fillna("").astype(str).str.contains(r"\bdriver\b", flags=re.IGNORECASE, regex=True)
+    set_driver = set(alt.loc[is_driver, "VAR_ID"])
+
+    print(f"Total de Drivers identificados na base: {len(set_driver)}")
+
+except Exception as e:
+    print(f"ERRO CRÍTICO ao ler alterations.tsv: {e}")
+    set_driver = set() # Define vazio para não quebrar o loop, mas o gráfico ficará vazio
+
+# ========================================================
+# 2) LOOP POR TODAS AS AMOSTRAS (WP*-tier.tsv)
+# ========================================================
+
+file_list = glob.glob(INPUT_PATTERN)
+print(f"\nEncontrados {len(file_list)} arquivos Tier para analisar.\n")
+
+for tier_file in file_list:
+    # Extrair ID do nome do arquivo (ex: outputs/WP017-tier.tsv -> WP017)
+    filename = os.path.basename(tier_file)
+    sample_id = filename.split('-')[0] # Pega a parte antes do primeiro hífen
+
+    print(f"--> Analisando: {sample_id}")
+
+    try:
+        tiers = pd.read_csv(tier_file, sep="\t", dtype=str)
+
+        t_chr = pick_first_existing_col(tiers, ["CHROM", "#CHROM", "CHR", "Chrom"])
+        t_pos = pick_first_existing_col(tiers, ["POS", "Position", "pos"])
+        t_ref = pick_first_existing_col(tiers, ["REF", "Ref"])
+        t_alt = pick_first_existing_col(tiers, ["ALT", "Alt"])
+
+        # Verificação rápida de colunas
+        if not all([t_chr, t_pos, t_ref, t_alt]):
+            print(f"   [PULANDO] {sample_id}: Colunas de coordenadas não encontradas.")
+            continue
+
+        tiers["VAR_ID"] = make_var_id(tiers, t_chr, t_pos, t_ref, t_alt)
+
+        # Filtra apenas Tier 1
+        set_t1 = set(tiers.loc[tiers["Tier"].astype(str) == "Tier 1", "VAR_ID"])
+
+        # ----------------------------
+        # 3) Venn & Salvamento
+        # ----------------------------
+        plt.figure(figsize=(5, 5))
+        venn2([set_driver, set_t1], set_labels=("CGI Driver", f"{sample_id} Tier 1"))
+        plt.title(f"Venn: {sample_id}")
+
+        # Salvar imagem
+        img_path = os.path.join(OUTPUT_DIR, f"venn_{sample_id}.png")
+        plt.savefig(img_path)
+        plt.close() # Fecha a figura para liberar memória
+
+        # Salvar listas de interseção
+        intersection = sorted(set_driver & set_t1)
+        driver_only = sorted(set_driver - set_t1)
+        t1_only = sorted(set_t1 - set_driver)
+
+        # Salvar txt da interseção (o mais importante)
+        txt_path = os.path.join(OUTPUT_DIR, f"venn_intersection_{sample_id}.txt")
+        pd.Series(intersection).to_csv(txt_path, index=False, header=False)
+
+        print(f"   Tier 1 encontrados: {len(set_t1)}")
+        print(f"   Em comum (Interseção): {len(intersection)}")
+        print(f"   Salvo imagem: {img_path}")
+
+    except Exception as e:
+        print(f"   [ERRO] Falha ao processar {sample_id}: {e}")
+
+print("\nAnálise de Venn finalizada para todas as amostras.")
+```
+
 <img src="https://github.com/user-attachments/assets/814340f4-9feb-4a52-9df9-d10ea2cc9a99" width="268" height="268" alt="image" />
 
