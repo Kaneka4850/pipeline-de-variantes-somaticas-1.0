@@ -637,19 +637,19 @@ Após realizar a analise de todas as amostras, o proximo passo é realizar o com
 import pandas as pd
 import re
 import matplotlib.pyplot as plt
-from matplotlib_venn import venn2
+from matplotlib_venn import venn2, venn2_circles
 import glob
 import os
 
 # =========================
 # CONFIG
 # =========================
-ALTERATIONS_TSV = "/content/alterations.tsv"   # Arquivo fixo (CGI Drivers)
-INPUT_PATTERN   = "outputs/*-tier.tsv"         # Padrão dos arquivos gerados no passo anterior
-OUTPUT_DIR      = "outputs"                    # Onde salvar os gráficos e txts
+ALTERATIONS_TSV = "/content/alterations.tsv"
+INPUT_PATTERN   = "outputs/*-tier.tsv"
+OUTPUT_DIR      = "outputs"
 
 # =========================
-# FUNÇÕES
+# FUNÇÕES AUXILIARES
 # =========================
 def pick_first_existing_col(df, candidates):
     for c in candidates:
@@ -661,7 +661,6 @@ def norm_chr(x):
     s = str(x).strip()
     if not s:
         return s
-    # Normaliza para sempre ter "chr" (ex: "1" vira "chr1")
     return s if s.lower().startswith("chr") else "chr" + s
 
 def make_var_id(df, chr_col, pos_col, ref_col, alt_col):
@@ -673,7 +672,7 @@ def make_var_id(df, chr_col, pos_col, ref_col, alt_col):
     )
 
 # ========================================================
-# 1) CARREGAR DRIVER SET (alterations.tsv) - FEITO UMA VEZ SÓ
+# 1) CARREGAR DRIVER SET
 # ========================================================
 print("Carregando base de Drivers (alterations.tsv)...")
 
@@ -693,7 +692,7 @@ try:
 
     alt["VAR_ID"] = make_var_id(alt, chr_col, pos_col, ref_col, alt_col)
 
-    # Considera driver se a coluna CGI tiver a palavra "driver"
+    # Filtro de driver
     is_driver = alt[pred_col].fillna("").astype(str).str.contains(r"\bdriver\b", flags=re.IGNORECASE, regex=True)
     set_driver = set(alt.loc[is_driver, "VAR_ID"])
 
@@ -701,19 +700,18 @@ try:
 
 except Exception as e:
     print(f"ERRO CRÍTICO ao ler alterations.tsv: {e}")
-    set_driver = set() # Define vazio para não quebrar o loop, mas o gráfico ficará vazio
+    set_driver = set()
 
 # ========================================================
-# 2) LOOP POR TODAS AS AMOSTRAS (WP*-tier.tsv)
+# 2) LOOP POR TODAS AS AMOSTRAS
 # ========================================================
 
 file_list = glob.glob(INPUT_PATTERN)
 print(f"\nEncontrados {len(file_list)} arquivos Tier para analisar.\n")
 
 for tier_file in file_list:
-    # Extrair ID do nome do arquivo (ex: outputs/WP017-tier.tsv -> WP017)
     filename = os.path.basename(tier_file)
-    sample_id = filename.split('-')[0] # Pega a parte antes do primeiro hífen
+    sample_id = filename.split('-')[0]
 
     print(f"--> Analisando: {sample_id}")
 
@@ -725,40 +723,64 @@ for tier_file in file_list:
         t_ref = pick_first_existing_col(tiers, ["REF", "Ref"])
         t_alt = pick_first_existing_col(tiers, ["ALT", "Alt"])
 
-        # Verificação rápida de colunas
         if not all([t_chr, t_pos, t_ref, t_alt]):
             print(f"   [PULANDO] {sample_id}: Colunas de coordenadas não encontradas.")
             continue
 
         tiers["VAR_ID"] = make_var_id(tiers, t_chr, t_pos, t_ref, t_alt)
-
-        # Filtra apenas Tier 1
         set_t1 = set(tiers.loc[tiers["Tier"].astype(str) == "Tier 1", "VAR_ID"])
 
         # ----------------------------
-        # 3) Venn & Salvamento
+        # 3) Venn & Salvamento (ESTILO NOVO)
         # ----------------------------
-        plt.figure(figsize=(5, 5))
-        venn2([set_driver, set_t1], set_labels=("CGI Driver", f"{sample_id} Tier 1"))
-        plt.title(f"Venn: {sample_id}")
 
-        # Salvar imagem
-        img_path = os.path.join(OUTPUT_DIR, f"venn_{sample_id}.png")
-        plt.savefig(img_path)
-        plt.close() # Fecha a figura para liberar memória
+        # Aumentar tamanho da figura para melhor resolução
+        plt.figure(figsize=(8, 8))
 
-        # Salvar listas de interseção
+        # Cores profissionais: Azul Petróleo (Database) e Laranja Ouro (Amostra)
+        # Alpha define a transparência
+        colors = ('#006ba4', '#ff800e')
+
+        # Cria o Venn
+        v = venn2([set_driver, set_t1],
+                  set_labels=("Banco de Dados\nCGI Drivers", f"Amostra {sample_id}\n(Tier 1)"),
+                  set_colors=colors,
+                  alpha=0.7)
+
+        # Adiciona bordas sólidas aos círculos para acabamento premium
+        c = venn2_circles([set_driver, set_t1], linestyle='-', linewidth=1, color='grey')
+
+        # CUSTOMIZAÇÃO FINA DAS FONTES
+        try:
+            # Aumentar fonte dos números dentro do gráfico
+            for text in v.subset_labels:
+                if text:
+                    text.set_fontsize(22) # Tamanho do número
+                    text.set_fontweight('bold')
+
+            # Aumentar fonte dos Labels (títulos dos círculos)
+            for text in v.set_labels:
+                if text:
+                    text.set_fontsize(14)
+        except:
+            pass # Caso algum set esteja vazio, evita erro
+
+        # Título mais profissional e descritivo
+        plt.title(f"Interseção de Variantes: {sample_id} vs CGI", fontsize=18, pad=20)
+
+        # Salvar imagem em ALTA RESOLUÇÃO (300 DPI) e cortando bordas brancas (bbox_inches)
+        img_path = os.path.join(OUTPUT_DIR, f"venn_{sample_id}_HQ.png")
+        plt.savefig(img_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Salvar txts
         intersection = sorted(set_driver & set_t1)
-        driver_only = sorted(set_driver - set_t1)
-        t1_only = sorted(set_t1 - set_driver)
-
-        # Salvar txt da interseção (o mais importante)
         txt_path = os.path.join(OUTPUT_DIR, f"venn_intersection_{sample_id}.txt")
         pd.Series(intersection).to_csv(txt_path, index=False, header=False)
 
         print(f"   Tier 1 encontrados: {len(set_t1)}")
         print(f"   Em comum (Interseção): {len(intersection)}")
-        print(f"   Salvo imagem: {img_path}")
+        print(f"   Salvo imagem HQ: {img_path}")
 
     except Exception as e:
         print(f"   [ERRO] Falha ao processar {sample_id}: {e}")
